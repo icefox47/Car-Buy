@@ -14,9 +14,17 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Dynamic CORS: Allow any origin in dev, or specific frontend URL in production
-frontend_url = os.environ.get('FRONTEND_URL', '*')
-CORS(app, resources={r"/api/*": {"origins": frontend_url}})
+# Dynamic CORS: Handle trailing slashes and multiple origins
+frontend_url_raw = os.environ.get('FRONTEND_URL', '*')
+if frontend_url_raw and frontend_url_raw != '*':
+    # Create a list of allowed origins: original + stripped version
+    origins = [frontend_url_raw]
+    if frontend_url_raw.endswith('/'):
+        origins.append(frontend_url_raw.rstrip('/'))
+else:
+    origins = '*'
+
+CORS(app, resources={r"/*": {"origins": origins}})
 
 # Database Configuration
 basedir = os.path.abspath(os.path.dirname(__file__))
