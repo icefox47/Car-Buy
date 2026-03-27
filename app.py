@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 from collections import Counter
 import os
 import jwt
-import webbrowser
 from threading import Timer
 from functools import wraps
 from dotenv import load_dotenv
@@ -14,7 +13,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+
+# Dynamic CORS: Allow any origin in dev, or specific frontend URL in production
+frontend_url = os.environ.get('FRONTEND_URL', '*')
+CORS(app, resources={r"/api/*": {"origins": frontend_url}})
 
 # Database Configuration
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -102,6 +104,10 @@ def require_admin_token(f):
         
         return f(*args, **kwargs)
     return decorated
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({'status': 'healthy', 'timestamp': datetime.utcnow().isoformat()}), 200
 
 # ─── Admin API Endpoints ───
 
@@ -460,7 +466,9 @@ def init_db():
     with app.app_context():
         db.create_all()
 
+# Ensure DB is initialized
+init_db()
 
 if __name__ == '__main__':
-    init_db()
-    app.run(debug=True, port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)

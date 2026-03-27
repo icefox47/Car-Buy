@@ -25,11 +25,12 @@ const AdminDashboard = () => {
     const token = localStorage.getItem('admin_token');
     
     try {
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
       const [statsRes, inquiriesRes] = await Promise.all([
-        fetch('http://127.0.0.1:5000/api/admin/stats', {
+        fetch(`${baseUrl}/api/admin/stats`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
-        fetch(`http://127.0.0.1:5000/api/admin/inquiries?page=${page}&search=${searchTerm}`, {
+        fetch(`${baseUrl}/api/admin/inquiries?page=${page}&search=${searchTerm}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         })
       ]);
