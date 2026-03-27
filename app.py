@@ -337,16 +337,18 @@ SAMPLE_CARS = [
 # Routes
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return jsonify({
+        'status': 'online',
+        'message': 'CarFinder Backend API is running!',
+        'documentation_url': 'https://github.com/icefox47/Car-Buy'
+    }), 200
 
 @app.route('/car-form')
 def car_form():
-    # Get query parameters
-    make = request.args.get('make', '')
-    car_type = request.args.get('type', '')
-    year = request.args.get('year', '')
-    
-    return render_template('car-form.html', make=make, type=car_type, year=year)
+    return jsonify({
+        'status': 'error',
+        'message': 'This route is deprecated. Please use the React frontend instead.'
+    }), 410 # Gone
 
 @app.route('/api/submit-inquiry', methods=['POST'])
 def submit_inquiry():
@@ -463,8 +465,18 @@ def get_inquiries():
     return jsonify([inquiry.to_dict() for inquiry in inquiries])
 
 def init_db():
-    with app.app_context():
-        db.create_all()
+    try:
+        with app.app_context():
+            print("--- DIAGNOSTIC: Initializing Database ---")
+            print(f"DATABASE_URI is set: {bool(app.config.get('SQLALCHEMY_DATABASE_URI'))}")
+            db.create_all()
+            print("--- DIAGNOSTIC: Database Initialized Successfully ---")
+    except Exception as e:
+        print("--- ERROR: Database Initialization Failed ---")
+        print(f"Type: {type(e).__name__}")
+        print(f"Details: {str(e)}")
+        # Don't re-raise yet, let the app try to start so we see logs
+        pass
 
 # Ensure DB is initialized
 init_db()
